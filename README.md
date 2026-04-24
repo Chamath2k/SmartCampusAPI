@@ -227,3 +227,190 @@ Notes
 * No database is used (as required)
 * Data is stored using in-memory lists
 * Designed to run on any machine with Tomcat
+
+----------------------------------------------------------------------------------------------
+  Coursework Answers
+
+Question 1: JAX-RS Resource Lifecycle
+In JAX-RS, resource classes are by default instantiated per request, meaning a new instance is created for each incoming HTTP request.
+
+This design ensures:
+
+Thread safety (no shared instance state)
+Reduced risk of concurrency issues
+
+However, in this project, shared data (Rooms, Sensors, Readings) is stored in static in-memory collections (e.g., ArrayList).
+
+Because multiple requests can access these collections simultaneously, this introduces potential race conditions.
+
+To mitigate this:
+
+The API avoids complex concurrent modifications
+Operations are kept simple (add/remove/search)
+
+In a production system, synchronization or concurrent data structures would be required.
+
+-----------------------------------------------------------------------------------------------
+
+Question 2: HATEOAS (Hypermedia)
+
+Hypermedia (HATEOAS) allows API responses to include links to related resources.
+
+Example:
+
+{
+  "rooms": "/api/v1/rooms",
+  "sensors": "/api/v1/sensors"
+}
+
+Benefits:
+
+Clients do not need hardcoded URLs
+API becomes self-discoverable
+Easier to evolve API without breaking clients
+
+Compared to static documentation, HATEOAS improves flexibility and usability.
+
+------------------------------------------------------------------------------------------------
+
+Question 3: Returning IDs vs Full Objects
+
+Returning only IDs:
+
+Reduces network usage
+Faster responses
+Requires additional requests from client
+
+Returning full objects:
+
+More convenient for client
+Fewer API calls needed
+Higher payload size
+
+In this project, full objects are returned for simplicity and usability.
+
+-------------------------------------------------------------------------------------------------
+
+Question 4: Is DELETE Idempotent?
+
+Yes, DELETE is idempotent.
+
+In this implementation:
+First DELETE → removes the room
+Subsequent DELETE → returns "Room not found"
+
+The result is consistent:
+The room remains deleted
+
+Therefore, the operation satisfies idempotency.
+
+-------------------------------------------------------------------------------------------------
+
+Question 5: @Consumes(JSON) Behavior
+
+The annotation:
+
+@Consumes(MediaType.APPLICATION_JSON)
+
+means the API only accepts JSON input.
+
+If a client sends:
+text/plain
+application/xml
+
+JAX-RS will reject the request and return:
+HTTP 415 – Unsupported Media Type
+
+This ensures correct data format and prevents parsing errors.
+
+--------------------------------------------------------------------------------------------------
+
+Question 6: QueryParam vs PathParam for Filtering
+
+Using query parameters:
+
+/api/v1/sensors?type=Temperature
+
+is better because:
+
+Filtering is optional
+Supports multiple filters easily
+Cleaner and more flexible
+
+Using path-based filtering:
+
+/api/v1/sensors/type/Temperature
+
+is less flexible and harder to extend.
+
+Therefore, query parameters are preferred for searching and filtering.
+
+--------------------------------------------------------------------------------------------------
+
+Question 7: Sub-Resource Locator Benefits
+
+The sub-resource locator pattern allows delegation:
+
+@Path("/{id}/readings")
+public ReadingResource getReadingResource(...)
+
+Benefits:
+
+Cleaner code structure
+Separation of concerns
+Easier maintenance
+Scales better for large APIs
+
+Without it, one class would become too large and complex.
+
+-------------------------------------------------------------------------------------------------
+
+Question 8: Why HTTP 422 instead of 404?
+
+HTTP 422 is more accurate because:
+
+The request format is valid JSON
+But contains invalid data (non-existent roomId)
+
+404 means resource not found at URL
+422 means request cannot be processed
+
+Thus, 422 better represents the error.
+
+--------------------------------------------------------------------------------------------------
+
+Question 9: Stack Trace Security Risk
+
+Exposing stack traces is dangerous because attackers can learn:
+
+Internal class names
+File structure
+Framework details
+Potential vulnerabilities
+
+This information can be used for targeted attacks.
+
+Therefore, the API returns controlled error messages instead of raw exceptions.
+
+--------------------------------------------------------------------------------------------------
+
+Question 10: Why Use Filters for Logging?
+
+Using JAX-RS filters:
+
+ContainerRequestFilter
+ContainerResponseFilter
+
+is better because:
+
+Centralized logging
+Avoids duplicate code
+Applies to all endpoints automatically
+
+Compared to manual logging:
+
+Cleaner design
+Easier maintenance
+Less error-prone
+
+----------------------------------------------------------------------------------------------------
